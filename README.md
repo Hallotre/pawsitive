@@ -58,7 +58,7 @@ pawsitive/
 
 1. **Clone the repository**
    ```bash
-   git clone <https://github.com/Hallotre/pawsitive>
+   git clone https://github.com/Hallotre/pawsitive
    cd pawsitive
    ```
 
