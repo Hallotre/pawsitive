@@ -9,17 +9,25 @@ const API_HEADERS = {
 export interface Pet {
   id: string;
   name: string;
+  species: string;  // Added - API returns this
   breed: string;
   age: number;
+  gender: string;   // Added - API returns this
   size: string;
   color: string;
   description: string;
+  adoptionStatus: string;  // Added - API returns this
+  location: string;        // Added - API returns this
   image?: {
     url: string;
     alt: string;
   };
   created: string;
   updated: string;
+  owner?: {            // Added - API returns this
+    name: string;
+    email: string;
+  };
 }
 
 export interface ApiResponse<T> {
@@ -62,8 +70,19 @@ async function apiRequest<T>(
     });
 
     if (!response.ok) {
+      // Try to get error details from response body
+      let errorDetails = '';
+      try {
+        const errorBody = await response.json();
+        errorDetails = JSON.stringify(errorBody);
+        console.error('API Error Details:', errorBody);
+      } catch (e) {
+        errorDetails = await response.text();
+        console.error('API Error Text:', errorDetails);
+      }
+      
       throw new ApiError(
-        `API request failed: ${response.statusText}`,
+        `API request failed: ${response.statusText}${errorDetails ? ` - ${errorDetails}` : ''}`,
         response.status,
         response.statusText
       );
@@ -96,19 +115,104 @@ export async function searchPets(query: string, page: number = 1): Promise<ApiRe
   return apiRequest<Pet[]>(`/pets?${searchParams.toString()}`);
 }
 
-// Authentication functions (for admin features)
-export async function login(email: string, password: string) {
-  return apiRequest('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify({ email, password }),
-  });
+// Authentication types and functions
+export interface NoroffUser {
+  name: string;
+  email: string;
+  bio?: string;
+  avatar?: {
+    url: string;
+    alt: string;
+  };
+  banner?: {
+    url: string;
+    alt: string;
+  };
+  accessToken?: string;
 }
 
-export async function register(name: string, email: string, password: string) {
-  return apiRequest('/auth/register', {
-    method: 'POST',
-    body: JSON.stringify({ name, email, password }),
-  });
+export async function login(email: string, password: string): Promise<ApiResponse<NoroffUser>> {
+  // For login, we shouldn't include API headers as they're for authenticated requests
+  const url = `${API_BASE_URL}/auth/login`;
+  
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!response.ok) {
+      // Try to get error details from response body
+      let errorDetails = '';
+      try {
+        const errorBody = await response.json();
+        errorDetails = JSON.stringify(errorBody);
+        console.error('Login API Error Details:', errorBody);
+      } catch (e) {
+        errorDetails = await response.text();
+        console.error('Login API Error Text:', errorDetails);
+      }
+      
+      throw new ApiError(
+        `Login failed: ${response.statusText}${errorDetails ? ` - ${errorDetails}` : ''}`,
+        response.status,
+        response.statusText
+      );
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new Error(`Login network error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+export async function register(name: string, email: string, password: string): Promise<ApiResponse<NoroffUser>> {
+  // For registration, we shouldn't include API headers as they're for authenticated requests
+  const url = `${API_BASE_URL}/auth/register`;
+  
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name, email, password }),
+    });
+
+    if (!response.ok) {
+      // Try to get error details from response body
+      let errorDetails = '';
+      try {
+        const errorBody = await response.json();
+        errorDetails = JSON.stringify(errorBody);
+        console.error('Registration API Error Details:', errorBody);
+      } catch (e) {
+        errorDetails = await response.text();
+        console.error('Registration API Error Text:', errorDetails);
+      }
+      
+      throw new ApiError(
+        `Registration failed: ${response.statusText}${errorDetails ? ` - ${errorDetails}` : ''}`,
+        response.status,
+        response.statusText
+      );
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new Error(`Registration network error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 }
 
 // Admin pet management functions

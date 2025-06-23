@@ -4,7 +4,7 @@ A modern, responsive web application for pet adoption built with Next.js, TypeSc
 
 ## 🌟 Features
 
-### Current Features (Phase 1 & 2)
+### Current Features (Phase 1-4 Complete)
 - ✅ **Beautiful Landing Page**: Modern, responsive design with animations
 - ✅ **Pet Browsing**: Comprehensive grid view of available pets with search and filtering
 - ✅ **Pet Details**: Individual pet pages with detailed information and adoption calls-to-action
@@ -17,13 +17,18 @@ A modern, responsive web application for pet adoption built with Next.js, TypeSc
 - ✅ **Responsive Design**: Works seamlessly on desktop, tablet, and mobile
 - ✅ **Modern UI**: Built with Tailwind CSS and Lucide React icons
 - ✅ **Accessibility**: WCAG 2.1 AA compliant with screen reader support
+- ✅ **Admin Authentication**: Secure login and registration system with Noroff API
+- ✅ **Protected Routes**: Middleware-based route protection for admin areas
+- ✅ **Session Management**: Secure session handling with encrypted cookies
+- ✅ **Admin Dashboard**: Statistics overview and pet management interface
+- ✅ **Pet Management**: Full CRUD operations for creating, editing, and deleting pets
+- ✅ **Form Validation**: Comprehensive form validation with error handling
+- ✅ **Image Upload**: Pet image management with preview functionality
 
-### Planned Features (Future Phases)
-- 🔄 **Admin Dashboard**: Pet management for authorized users
-- 🔄 **Authentication**: Secure login and registration system
-- 🔄 **Pet Management**: Create, edit, and delete pet listings
+### Planned Features (Phase 5-6)
 - 🔄 **Share Functionality**: Share specific pets with potential adopters
 - 🔄 **User Accounts**: Save favorites and adoption history
+- 🔄 **Performance Optimizations**: SEO and loading improvements
 
 ## 🛠️ Tech Stack
 
@@ -40,20 +45,58 @@ A modern, responsive web application for pet adoption built with Next.js, TypeSc
 pawsitive/
 ├── src/
 │   ├── app/
-│   │   ├── layout.tsx          # Root layout with navigation
-│   │   ├── page.tsx            # Landing page
-│   │   ├── globals.css         # Global styles with custom utilities
+│   │   ├── layout.tsx              # Root layout with navigation
+│   │   ├── page.tsx                # Landing page
+│   │   ├── globals.css             # Global styles with custom utilities
+│   │   ├── admin/                  # Admin-only pages (protected)
+│   │   │   ├── dashboard/
+│   │   │   │   └── page.tsx        # Admin dashboard with statistics
+│   │   │   └── pets/
+│   │   │       ├── page.tsx        # Pet management overview
+│   │   │       ├── new/
+│   │   │       │   └── page.tsx    # Create new pet form
+│   │   │       └── [id]/
+│   │   │           └── page.tsx    # Edit pet form
+│   │   ├── api/                    # API routes
+│   │   │   ├── auth/
+│   │   │   │   ├── login/
+│   │   │   │   │   └── route.ts    # Login endpoint
+│   │   │   │   ├── logout/
+│   │   │   │   │   └── route.ts    # Logout endpoint
+│   │   │   │   └── register/
+│   │   │   │       └── route.ts    # Registration endpoint
+│   │   │   └── pets/
+│   │   │       ├── route.ts        # Pet CRUD operations
+│   │   │       └── [id]/
+│   │   │           └── route.ts    # Individual pet operations
+│   │   ├── auth/                   # Authentication pages
+│   │   │   ├── login/
+│   │   │   │   └── page.tsx        # Admin login form
+│   │   │   ├── register/
+│   │   │   │   └── page.tsx        # Admin registration form
+│   │   │   └── unauthorized/
+│   │   │       └── page.tsx        # Access denied page
 │   │   └── pets/
-│   │       ├── page.tsx        # Pet browsing page with search & filters
+│   │       ├── page.tsx            # Pet browsing page with search & filters
 │   │       └── [id]/
-│   │           └── page.tsx    # Individual pet detail page
+│   │           └── page.tsx        # Individual pet detail page
+│   ├── components/                 # Reusable React components
+│   │   ├── DeletePetButton.tsx     # Pet deletion with confirmation
+│   │   ├── LogoutButton.tsx        # Secure logout functionality
+│   │   ├── PetForm.tsx             # Create/edit pet form
+│   │   └── index.ts                # Component exports
 │   └── lib/
-│       └── api.ts              # API utilities and types
-├── public/                     # Static assets
-├── package.json               # Dependencies and scripts
-├── tailwind.config.ts         # Tailwind configuration
-├── tsconfig.json             # TypeScript configuration
-└── README.md                 # Project documentation
+│       ├── api.ts                  # API utilities and types
+│       ├── auth.ts                 # Authentication helpers
+│       ├── session.ts              # Session management
+│       └── styles.ts               # Shared styling utilities
+├── middleware.ts                   # Route protection middleware
+├── public/                         # Static assets
+├── package.json                   # Dependencies and scripts
+├── tailwind.config.ts             # Tailwind configuration
+├── tsconfig.json                  # TypeScript configuration
+├── .env.example                   # Environment variables template
+└── README.md                     # Project documentation
 ```
 
 ## 🚀 Getting Started
@@ -85,11 +128,27 @@ pawsitive/
    # Copy the example environment file
    cp .env.example .env.local
    
-   # Edit .env.local and add your Noroff API credentials
-   # You need to replace the placeholder values with your actual:
-   # - API_BEARER_TOKEN (from your Noroff API account)
-   # - API_KEY (from your Noroff API account)
+   # Edit .env.local and add the required values:
    ```
+   
+   **Required Environment Variables:**
+   ```env
+   # Noroff API Configuration
+   NEXT_PUBLIC_API_BASE_URL=https://v2.api.noroff.dev
+   API_BEARER_TOKEN=your_bearer_token_here
+   API_KEY=your_api_key_here
+   
+   # Session Management (create your own secure random string)
+   SESSION_SECRET=your_super_secret_session_key_here_change_in_production
+   ```
+   
+   **How to get Noroff API credentials:**
+   - Get `API_BEARER_TOKEN` and `API_KEY` from your Noroff API account
+   
+   **How to create SESSION_SECRET:**
+   - Generate a secure random string (32+ characters)
+   - Example: `pawsitive-app-secret-key-2025-xyz789-change-in-production`
+   - This is YOUR password for session encryption (make it unique!)
 
 4. **Start the development server**
    ```bash
@@ -128,51 +187,25 @@ The application integrates with the Noroff API v2 for pet data management:
 
 - **Base URL**: `https://v2.api.noroff.dev`
 - **Authentication**: Bearer token and API key (stored in environment variables)
-- **Endpoints**: 
-  - `/pets` - Get all pets, create new pet
-  - `/pets/:id` - Get, update, or delete specific pet
-  - `/auth/login` - Admin authentication
-  - `/auth/register` - Admin registration
+- **Public Endpoints**: 
+  - `GET /pets` - Browse all pets (no auth required)
+  - `GET /pets/:id` - View individual pet details
+- **Protected Endpoints**:
+  - `POST /pets` - Create new pet (admin only)
+  - `PUT /pets/:id` - Update pet information (admin only)
+  - `DELETE /pets/:id` - Remove pet (admin only)
+  - `POST /auth/login` - Admin authentication
+  - `POST /auth/register` - Admin registration
 
-### 🔒 Security
+### 🔒 Security & Session Management
 
-- API credentials are stored in environment variables (`.env.local`)
-- The `.env.local` file is ignored by git and never committed
-- Use `env.example` as a template for required environment variables
-- All API calls include proper authentication headers
+- **API Authentication**: Noroff API credentials stored securely in environment variables
+- **Session Management**: Custom encrypted session system using `SESSION_SECRET`
+- **Route Protection**: Middleware-based protection for admin routes
+- **Environment Security**: All sensitive data in `.env.local` (never committed to git)
+- **Session Encryption**: User sessions encrypted with your own secret key
+- **Automatic Logout**: Sessions expire after 7 days for security
 
-### API Types
-
-```typescript
-interface Pet {
-  id: string;
-  name: string;
-  breed: string;
-  age: number;
-  size: string;
-  color: string;
-  description: string;
-  image?: {
-    url: string;
-    alt: string;
-  };
-  created: string;
-  updated: string;
-}
-
-interface ApiResponse<T> {
-  data: T;
-  meta?: {
-    isFirstPage: boolean;
-    isLastPage: boolean;
-    currentPage: number;
-    previousPage: number | null;
-    nextPage: number | null;
-    pageCount: number;
-    totalCount: number;
-  };
-}
-```
 
 ## 🐾 Pet Browsing Features
 
@@ -200,6 +233,34 @@ interface ApiResponse<T> {
 - **`usePet()`**: Individual pet data fetching with loading states
 - Both hooks include proper cleanup to prevent race conditions
 
+## 🔐 Admin Authentication & Management
+
+### Authentication System
+- **Hybrid Authentication**: Combines Noroff API validation with local session management
+- **Secure Login**: Admin credentials validated against Noroff API
+- **Session Persistence**: Users stay logged in across browser sessions (7-day expiry)
+- **Route Protection**: Middleware automatically protects admin routes
+- **Unauthorized Handling**: Clear feedback and redirects for access attempts
+
+### Admin Dashboard (`/admin/dashboard`)
+- **Statistics Overview**: Real-time pet counts and adoption metrics
+- **Quick Actions**: Direct access to pet management functions
+- **Recent Activity**: Display of recently added or updated pets
+- **Responsive Layout**: Works seamlessly on all device sizes
+
+### Pet Management System (`/admin/pets`)
+- **Complete CRUD Operations**: Create, read, update, and delete pets
+- **Form Validation**: Comprehensive validation with helpful error messages
+- **Image Management**: Upload and preview pet images
+- **Bulk Operations**: Manage multiple pets efficiently
+- **Confirmation Dialogs**: Prevent accidental deletions with confirmation modals
+
+### Security Features
+- **Encrypted Sessions**: All session data encrypted with `SESSION_SECRET`
+- **Protected API Routes**: Admin-only endpoints secured with authentication checks
+- **Secure Logout**: Complete session cleanup on logout
+- **CSRF Protection**: Built-in protection against cross-site request forgery
+
 ## 🏗️ Development Roadmap
 
 ### Phase 1: Foundation ✅
@@ -220,16 +281,16 @@ interface ApiResponse<T> {
 - [x] Favorites system with heart button interactions
 - [x] Accessibility improvements (WCAG 2.1 AA compliant)
 
-### Phase 3: Authentication & Admin (Next)
-- [ ] User authentication system
-- [ ] Admin login and registration pages
-- [ ] Protected routes for admin features
+### Phase 3: Authentication & Admin ✅
+- [x] User authentication system with Noroff API integration
+- [x] Admin login and registration pages
+- [x] Protected routes for admin features
 
-### Phase 4: Pet Management
-- [ ] Admin dashboard
-- [ ] Create pet form
-- [ ] Edit pet functionality
-- [ ] Delete pet with confirmation
+### Phase 4: Pet Management ✅
+- [x] Admin dashboard with statistics and overview
+- [x] Create pet form with validation
+- [x] Edit pet functionality with pre-populated data
+- [x] Delete pet with confirmation modal
 
 ### Phase 5: Advanced Features
 - [ ] Share functionality with clipboard API
@@ -286,11 +347,13 @@ The application is built with accessibility as a priority, meeting WCAG 2.1 AA s
 - 🔄 As a user, I want to share a pet's page with others
 
 ### Admin Users
-- 🔄 As an admin, I want to log in securely to manage pets
-- 🔄 As an admin, I want to add new pets to the system
-- 🔄 As an admin, I want to edit existing pet information
-- 🔄 As an admin, I want to remove pets that have been adopted
+- ✅ As an admin, I want to log in securely to manage pets
+- ✅ As an admin, I want to add new pets to the system with comprehensive forms
+- ✅ As an admin, I want to edit existing pet information easily
+- ✅ As an admin, I want to remove pets with confirmation to prevent accidents
+- ✅ As an admin, I want to see dashboard statistics and overview of all pets
+- ✅ As an admin, I want my session to remain secure and expire appropriately
 
 ## 📄 License
 
-This project is part of a course assignment and is for educational purposes.
+This project is part of a course assignment and is for educational purposes. 
