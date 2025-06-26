@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
-import { PawPrint, Menu, X } from "lucide-react";
+import { PawPrint, Menu } from "lucide-react";
+import { Navigation } from "@/components";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -18,63 +19,6 @@ export const metadata: Metadata = {
   title: "Pawsitive - Pet Adoption Made Easy",
   description: "Find your perfect furry friend. Connect loving families with pets in need of homes through our modern pet adoption platform.",
 };
-
-function Navigation() {
-  return (
-    <nav className="bg-white shadow-lg fixed w-full top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <PawPrint className="h-8 w-8 text-orange-500" />
-            <span className="text-2xl font-bold text-gray-900">Pawsitive</span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link
-              href="/"
-              className="text-gray-700 hover:text-orange-500 transition-colors font-medium"
-            >
-              Home
-            </Link>
-            <Link
-              href="/pets"
-              className="text-gray-700 hover:text-orange-500 transition-colors font-medium"
-            >
-              Browse Pets
-            </Link>
-            <Link
-              href="/about"
-              className="text-gray-700 hover:text-orange-500 transition-colors font-medium"
-            >
-              About Us
-            </Link>
-            <Link
-              href="/contact"
-              className="text-gray-700 hover:text-orange-500 transition-colors font-medium"
-            >
-              Contact
-            </Link>
-            <Link
-              href="/auth/login"
-              className="bg-orange-500 text-white px-6 py-2 rounded-full hover:bg-orange-600 transition-colors font-medium"
-            >
-              Admin Login
-            </Link>
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <button className="text-gray-700 hover:text-orange-500">
-              <Menu className="h-6 w-6" />
-            </button>
-          </div>
-        </div>
-      </div>
-    </nav>
-  );
-}
 
 function Footer() {
   return (

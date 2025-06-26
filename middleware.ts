@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { decrypt } from './src/lib/session'
 
 // Define protected and public routes
-const protectedRoutes = ['/admin', '/admin/pets', '/admin/dashboard']
-const publicRoutes = ['/auth/login', '/auth/register', '/auth/unauthorized', '/', '/pets']
+const protectedRoutes = ['/admin', '/admin/pets', '/admin/dashboard', '/account']
+const publicRoutes = ['/auth/login', '/auth/register', '/auth/register-user', '/auth/unauthorized', '/', '/pets']
 
 export default async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname
@@ -19,7 +19,7 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/auth/login', req.nextUrl))
   }
 
-  // Redirect to admin dashboard if authenticated user tries to access auth pages
+  // Redirect to appropriate dashboard if authenticated user tries to access auth pages
   if (
     path.startsWith('/auth/') && 
     session?.userId &&
@@ -27,6 +27,8 @@ export default async function middleware(req: NextRequest) {
   ) {
     if (session.role === 'admin') {
       return NextResponse.redirect(new URL('/admin/dashboard', req.nextUrl))
+    } else if (session.role === 'user') {
+      return NextResponse.redirect(new URL('/account/dashboard', req.nextUrl))
     }
     return NextResponse.redirect(new URL('/', req.nextUrl))
   }
@@ -34,6 +36,11 @@ export default async function middleware(req: NextRequest) {
   // Check admin role for admin routes
   if (path.startsWith('/admin') && session?.userId && session.role !== 'admin') {
     return NextResponse.redirect(new URL('/auth/unauthorized', req.nextUrl))
+  }
+
+  // Account routes are for authenticated users only (both admin and regular users can access)
+  if (path.startsWith('/account') && !session?.userId) {
+    return NextResponse.redirect(new URL('/auth/login', req.nextUrl))
   }
 
   return NextResponse.next()

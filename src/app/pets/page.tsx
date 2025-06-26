@@ -4,11 +4,16 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Search, Heart, PawPrint, Filter, MapPin, X, Clock } from 'lucide-react';
 import { getPets, Pet, ApiResponse } from '@/lib/api';
+import { isFavorited, toggleFavorite } from '@/lib/favorites';
+import { inputStyles, selectStyles, labelStyles } from '@/lib/styles';
 
 interface PetFilters {
   size: string;
   age: string;
   breed: string;
+  location: string;
+  specialNeeds: string;
+  sortBy: string;
 }
 
 interface SearchResult {
@@ -173,7 +178,7 @@ class SearchEngine {
 }
 
 // Custom hook for pet data fetching with filtering
-function usePets(searchQuery: string = '', filters: PetFilters = { size: '', age: '', breed: '' }, currentPage: number = 1) {
+function usePets(searchQuery: string = '', filters: PetFilters = { size: '', age: '', breed: '', location: '', specialNeeds: '', sortBy: '' }, currentPage: number = 1) {
   const [allPets, setAllPets] = useState<Pet[]>([]);
   const [filteredPets, setFilteredPets] = useState<Pet[]>([]);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -190,8 +195,8 @@ function usePets(searchQuery: string = '', filters: PetFilters = { size: '', age
         setLoading(true);
         setError(null);
         
-        // Fetch a large number of pets to enable client-side filtering
-        const response = await getPets(1, 100); // Get more pets for filtering
+        // Fetch pets with API limit (max 100)
+        const response = await getPets(1, 100); // API limit is 100
         
         if (!ignore) {
           setAllPets(response.data);
@@ -275,28 +280,85 @@ function usePets(searchQuery: string = '', filters: PetFilters = { size: '', age
       });
     }
 
+    // Apply location filter
+    if (filters.location) {
+      filtered = filtered.filter(pet => {
+        // Use pet.location if available, otherwise use a default location matching
+        const petLocation = (pet as any).location || 'Local Shelter';
+        return petLocation.toLowerCase().includes(filters.location.toLowerCase());
+      });
+    }
+
+    // Apply special needs filter
+    if (filters.specialNeeds) {
+      filtered = filtered.filter(pet => {
+        const description = pet.description.toLowerCase();
+        switch (filters.specialNeeds) {
+          case 'none':
+            return !description.includes('special needs') && !description.includes('medication') && !description.includes('medical');
+          case 'medical':
+            return description.includes('medication') || description.includes('medical') || description.includes('special care');
+          case 'behavioral':
+            return description.includes('training') || description.includes('socialization') || description.includes('shy') || description.includes('anxious');
+          case 'mobility':
+            return description.includes('mobility') || description.includes('wheelchair') || description.includes('blind') || description.includes('deaf');
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Apply sorting
+    if (filters.sortBy) {
+      filtered.sort((a, b) => {
+        switch (filters.sortBy) {
+          case 'newest':
+            // Sort by created date, newest first
+            return new Date(b.created).getTime() - new Date(a.created).getTime();
+          case 'oldest':
+            // Sort by created date, oldest first
+            return new Date(a.created).getTime() - new Date(b.created).getTime();
+          case 'name':
+            // Sort alphabetically by name
+            return a.name.localeCompare(b.name);
+          case 'age-young':
+            // Sort by age, youngest first
+            return a.age - b.age;
+          case 'age-old':
+            // Sort by age, oldest first
+            return b.age - a.age;
+          default:
+            return 0;
+        }
+      });
+    }
+
     // Apply pagination
     const itemsPerPage = 12;
-    const startIndex = (currentPage - 1) * itemsPerPage;
+    const totalCount = filtered.length;
+    const pageCount = Math.ceil(totalCount / itemsPerPage);
+    
+    // Ensure currentPage doesn't exceed available pages
+    const validCurrentPage = Math.min(currentPage, Math.max(1, pageCount));
+    
+    const startIndex = (validCurrentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const paginatedPets = filtered.slice(startIndex, endIndex);
 
     setFilteredPets(paginatedPets);
 
     // Update meta information
-    const totalCount = filtered.length;
-    const pageCount = Math.ceil(totalCount / itemsPerPage);
     setMeta({
-      isFirstPage: currentPage === 1,
-      isLastPage: currentPage === pageCount || pageCount === 0,
-      currentPage,
-      previousPage: currentPage > 1 ? currentPage - 1 : null,
-      nextPage: currentPage < pageCount ? currentPage + 1 : null,
+      isFirstPage: validCurrentPage === 1,
+      isLastPage: validCurrentPage === pageCount || pageCount === 0,
+      currentPage: validCurrentPage,
+      previousPage: validCurrentPage > 1 ? validCurrentPage - 1 : null,
+      nextPage: validCurrentPage < pageCount ? validCurrentPage + 1 : null,
       pageCount,
       totalCount
     });
 
-  }, [allPets, searchQuery, filters, currentPage]);
+  }, [allPets, searchQuery, filters.size, filters.age, filters.breed, filters.location, filters.specialNeeds, filters.sortBy, currentPage]);
 
   return { pets: filteredPets, loading, error, meta, allPets, searchResults };
 }
@@ -306,7 +368,17 @@ function PetCard({ pet, searchQuery = '', matchedFields = [] }: {
   searchQuery?: string;
   matchedFields?: string[];
 }) {
-  const [isFavorited, setIsFavorited] = useState(false);
+  const [favorited, setFavorited] = useState(false);
+
+  // Check if pet is favorited on mount
+  useEffect(() => {
+    setFavorited(isFavorited(pet.id));
+  }, [pet.id]);
+
+  const handleToggleFavorite = () => {
+    const newFavoriteState = toggleFavorite(pet.id);
+    setFavorited(newFavoriteState);
+  };
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
@@ -317,15 +389,15 @@ function PetCard({ pet, searchQuery = '', matchedFields = [] }: {
           className="w-full h-64 object-cover"
         />
         <button
-          onClick={() => setIsFavorited(!isFavorited)}
-          aria-label={isFavorited ? `Remove ${pet.name} from favorites` : `Add ${pet.name} to favorites`}
+          onClick={handleToggleFavorite}
+          aria-label={favorited ? `Remove ${pet.name} from favorites` : `Add ${pet.name} to favorites`}
           className={`absolute top-4 right-4 p-2 rounded-full shadow-lg transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 ${
-            isFavorited 
+            favorited 
               ? 'bg-pink-500 text-white hover:bg-pink-600' 
               : 'bg-white text-gray-600 hover:bg-pink-50'
           }`}
         >
-          <Heart className={`h-5 w-5 ${isFavorited ? 'fill-current' : ''}`} />
+          <Heart className={`h-5 w-5 ${favorited ? 'fill-current' : ''}`} />
         </button>
         <div className="absolute bottom-4 left-4">
           <span className="bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-medium">
@@ -383,22 +455,20 @@ function SearchAndFilters({
   searchQuery, 
   onSearchChange,
   onFilterChange,
-  allPets = []
+  allPets = [],
+  currentFilters
 }: {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onFilterChange: (filters: PetFilters) => void;
   allPets?: Pet[];
+  currentFilters: PetFilters;
 }) {
   const [showFilters, setShowFilters] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [inputValue, setInputValue] = useState(searchQuery);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  const [filters, setFilters] = useState({
-    size: '',
-    age: '',
-    breed: ''
-  });
+  // Use the filters passed from parent instead of local state
 
   // Load recent searches from localStorage
   useEffect(() => {
@@ -412,6 +482,11 @@ function SearchAndFilters({
     }
   }, []);
 
+  // Sync input value with parent searchQuery
+  useEffect(() => {
+    setInputValue(searchQuery);
+  }, [searchQuery]);
+
   // Debounced search
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -419,14 +494,16 @@ function SearchAndFilters({
       
       // Save to recent searches if it's a meaningful query
       if (inputValue.trim().length > 2) {
-        const updated = [inputValue, ...recentSearches.filter(s => s !== inputValue)].slice(0, 5);
-        setRecentSearches(updated);
-        localStorage.setItem('pawsitive-recent-searches', JSON.stringify(updated));
+        setRecentSearches(prev => {
+          const updated = [inputValue, ...prev.filter(s => s !== inputValue)].slice(0, 5);
+          localStorage.setItem('pawsitive-recent-searches', JSON.stringify(updated));
+          return updated;
+        });
       }
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [inputValue, onSearchChange, recentSearches]);
+  }, [inputValue, onSearchChange]);
 
   // Generate search suggestions
   const suggestions = useMemo(() => {
@@ -466,8 +543,7 @@ function SearchAndFilters({
   }, [inputValue, allPets]);
 
   const handleFilterChange = (key: string, value: string) => {
-    const newFilters = { ...filters, [key]: value };
-    setFilters(newFilters);
+    const newFilters = { ...currentFilters, [key]: value };
     onFilterChange(newFilters);
   };
 
@@ -507,7 +583,7 @@ function SearchAndFilters({
             onFocus={() => setShowSuggestions(inputValue.length > 0)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
             aria-label="Search for pets with intelligent matching"
-            className="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-xl bg-white text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder:text-gray-400 placeholder:font-normal caret-orange-500"
+            className={inputStyles.large}
           />
           {inputValue && (
             <button
@@ -583,9 +659,9 @@ function SearchAndFilters({
           <Filter className="h-5 w-5 text-gray-600" />
           <span className="font-medium">Filters</span>
           {/* Show active filter count */}
-          {Object.values(filters).filter(Boolean).length > 0 && (
+          {Object.values(currentFilters).filter(Boolean).length > 0 && (
             <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full min-w-[20px] h-5 flex items-center justify-center">
-              {Object.values(filters).filter(Boolean).length}
+              {Object.values(currentFilters).filter(Boolean).length}
             </span>
           )}
         </button>
@@ -598,8 +674,7 @@ function SearchAndFilters({
             <h3 className="text-lg font-semibold text-gray-800">Filter Options</h3>
             <button
               onClick={() => {
-                const clearedFilters = { size: '', age: '', breed: '' };
-                setFilters(clearedFilters);
+                const clearedFilters = { size: '', age: '', breed: '', location: '', specialNeeds: '', sortBy: '' };
                 onFilterChange(clearedFilters);
               }}
               className="text-sm text-orange-600 hover:text-orange-700 font-medium focus:outline-none focus:underline"
@@ -607,14 +682,14 @@ function SearchAndFilters({
               Clear All Filters
             </button>
           </div>
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-800 mb-2">Size</label>
               <select
-                value={filters.size}
+                value={currentFilters.size}
                 onChange={(e) => handleFilterChange('size', e.target.value)}
                 aria-label="Filter by pet size"
-                className="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-gray-400"
+                className={selectStyles.filter}
               >
                 <option value="">Any Size</option>
                 <option value="Small">Small</option>
@@ -626,10 +701,10 @@ function SearchAndFilters({
             <div>
               <label className="block text-sm font-semibold text-gray-800 mb-2">Age</label>
               <select
-                value={filters.age}
+                value={currentFilters.age}
                 onChange={(e) => handleFilterChange('age', e.target.value)}
                 aria-label="Filter by pet age"
-                className="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-gray-400"
+                className={selectStyles.filter}
               >
                 <option value="">Any Age</option>
                 <option value="young">Young (0-2 years)</option>
@@ -641,16 +716,69 @@ function SearchAndFilters({
             <div>
               <label className="block text-sm font-semibold text-gray-800 mb-2">Type</label>
               <select
-                value={filters.breed}
+                value={currentFilters.breed}
                 onChange={(e) => handleFilterChange('breed', e.target.value)}
                 aria-label="Filter by pet type"
-                className="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-gray-400"
+                className={selectStyles.filter}
               >
                 <option value="">Any Type</option>
                 <option value="dog">Dogs</option>
                 <option value="cat">Cats</option>
                 <option value="rabbit">Rabbits</option>
                 <option value="bird">Birds</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-semibold text-gray-800 mb-2">Location</label>
+              <select
+                value={currentFilters.location}
+                onChange={(e) => handleFilterChange('location', e.target.value)}
+                aria-label="Filter by location"
+                className={selectStyles.filter}
+              >
+                <option value="">Any Location</option>
+                <option value="local">Local Shelter</option>
+                <option value="downtown">Downtown</option>
+                <option value="uptown">Uptown</option>
+                <option value="suburbs">Suburbs</option>
+                <option value="rural">Rural Area</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-semibold text-gray-800 mb-2">Special Needs</label>
+              <select
+                value={currentFilters.specialNeeds}
+                onChange={(e) => handleFilterChange('specialNeeds', e.target.value)}
+                aria-label="Filter by special needs"
+                className={selectStyles.filter}
+              >
+                <option value="">Any Needs</option>
+                <option value="none">No Special Needs</option>
+                <option value="medical">Medical Care</option>
+                <option value="behavioral">Behavioral Support</option>
+                <option value="mobility">Mobility Assistance</option>
+              </select>
+            </div>
+          </div>
+          
+          {/* Sort Options */}
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="w-full md:w-64">
+              <label className="block text-sm font-semibold text-gray-800 mb-2">Sort By</label>
+              <select
+                value={currentFilters.sortBy}
+                onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                aria-label="Sort pets by"
+                className={selectStyles.filter}
+              >
+                <option value="">Default Order</option>
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="name">Name (A-Z)</option>
+                <option value="age-young">Age (Youngest First)</option>
+                <option value="age-old">Age (Oldest First)</option>
               </select>
             </div>
           </div>
@@ -684,22 +812,79 @@ function LoadingGrid() {
 export default function PetsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [filters, setFilters] = useState<PetFilters>({ size: '', age: '', breed: '' });
+  const [filters, setFilters] = useState<PetFilters>({ size: '', age: '', breed: '', location: '', specialNeeds: '', sortBy: '' });
+  
+  // Initialize from URL params only once
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const page = parseInt(params.get('page') || '1');
+      const search = params.get('search') || '';
+      
+      if (page > 1) setCurrentPage(page);
+      if (search) setSearchQuery(search);
+    }
+  }, []);
   
   const { pets, loading, error, meta, allPets, searchResults } = usePets(searchQuery, filters, currentPage);
 
   const handleSearchChange = (query: string) => {
-    setSearchQuery(query);
-    setCurrentPage(1); // Reset to first page when searching
+    // Only update state and reset pagination if the query actually changed
+    if (query !== searchQuery) {
+      setSearchQuery(query);
+      setCurrentPage(1); // Reset to first page when searching
+      
+      // Update URL
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        if (query) {
+          params.set('search', query);
+        } else {
+          params.delete('search');
+        }
+        params.delete('page'); // Reset page when searching
+        
+        const newUrl = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
+        window.history.pushState(null, '', newUrl);
+      }
+    }
   };
 
   const handleFilterChange = (newFilters: PetFilters) => {
+    // Check if only sortBy changed (sorting shouldn't reset pagination)
+    const oldFiltersWithoutSort = { ...filters, sortBy: '' };
+    const newFiltersWithoutSort = { ...newFilters, sortBy: '' };
+    const onlySortChanged = JSON.stringify(oldFiltersWithoutSort) === JSON.stringify(newFiltersWithoutSort) && filters.sortBy !== newFilters.sortBy;
+    
     setFilters(newFilters);
-    setCurrentPage(1); // Reset to first page when filtering
+    
+    // Only reset to first page if actual filters changed (not just sorting)
+    if (!onlySortChanged) {
+      setCurrentPage(1);
+    }
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+    
+    // Update URL without full page reload
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (page > 1) {
+        params.set('page', page.toString());
+      } else {
+        params.delete('page');
+      }
+      if (searchQuery) {
+        params.set('search', searchQuery);
+      } else {
+        params.delete('search');
+      }
+      
+      const newUrl = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
+      window.history.pushState(null, '', newUrl);
+    }
+    
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -730,6 +915,7 @@ export default function PetsPage() {
             onSearchChange={handleSearchChange}
             onFilterChange={handleFilterChange}
             allPets={allPets}
+            currentFilters={filters}
           />
 
           {/* Results Count */}
@@ -768,6 +954,29 @@ export default function PetsPage() {
                   {filters.breed && (
                     <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-sm">
                       Type: {filters.breed.charAt(0).toUpperCase() + filters.breed.slice(1)}s
+                    </span>
+                  )}
+                  {filters.location && (
+                    <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-sm">
+                      Location: {filters.location === 'local' ? 'Local Shelter' : filters.location.charAt(0).toUpperCase() + filters.location.slice(1)}
+                    </span>
+                  )}
+                  {filters.specialNeeds && (
+                    <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-sm">
+                      Special Needs: {filters.specialNeeds === 'none' ? 'None' : 
+                                      filters.specialNeeds === 'medical' ? 'Medical Care' :
+                                      filters.specialNeeds === 'behavioral' ? 'Behavioral Support' :
+                                      'Mobility Assistance'}
+                    </span>
+                  )}
+                  {filters.sortBy && (
+                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">
+                      Sort: {filters.sortBy === 'newest' ? 'Newest First' :
+                            filters.sortBy === 'oldest' ? 'Oldest First' :
+                            filters.sortBy === 'name' ? 'Name (A-Z)' :
+                            filters.sortBy === 'age-young' ? 'Age (Youngest First)' :
+                            filters.sortBy === 'age-old' ? 'Age (Oldest First)' :
+                            'Default'}
                     </span>
                   )}
                 </div>
@@ -835,7 +1044,7 @@ export default function PetsPage() {
           {/* Pagination */}
           {meta && meta.pageCount > 1 && !loading && (
             <div className="mt-12 flex justify-center">
-              <nav className="flex items-center space-x-2">
+              <nav className="flex items-center space-x-2" aria-label="Pagination Navigation">
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
@@ -845,24 +1054,70 @@ export default function PetsPage() {
                   Previous
                 </button>
                 
-                {Array.from({ length: Math.min(5, meta.pageCount) }, (_, i) => {
-                  const page = i + 1;
-                  return (
-                    <button
-                      key={page}
-                      onClick={() => handlePageChange(page)}
-                      aria-label={`Go to page ${page}`}
-                      aria-current={currentPage === page ? 'page' : undefined}
-                      className={`px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
-                        currentPage === page
-                          ? 'bg-orange-500 text-white'
-                          : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  );
-                })}
+                {(() => {
+                  const totalPages = meta.pageCount;
+                  const current = currentPage;
+                  const pages = [];
+                  
+                  // Always show first page
+                  if (totalPages > 0) {
+                    pages.push(1);
+                  }
+                  
+                  // Add ellipsis if needed before current group
+                  if (current > 4) {
+                    pages.push('...');
+                  }
+                  
+                  // Add pages around current page
+                  const start = Math.max(2, current - 1);
+                  const end = Math.min(totalPages - 1, current + 1);
+                  
+                  for (let i = start; i <= end; i++) {
+                    if (!pages.includes(i)) {
+                      pages.push(i);
+                    }
+                  }
+                  
+                  // Add ellipsis if needed after current group
+                  if (current < totalPages - 3) {
+                    if (!pages.includes('...')) {
+                      pages.push('...');
+                    }
+                  }
+                  
+                  // Always show last page
+                  if (totalPages > 1 && !pages.includes(totalPages)) {
+                    pages.push(totalPages);
+                  }
+                  
+                  return pages.map((page, index) => {
+                    if (page === '...') {
+                      return (
+                        <span key={`ellipsis-${index}`} className="px-4 py-2 text-gray-500">
+                          ...
+                        </span>
+                      );
+                    }
+                    
+                    const pageNum = page as number;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        aria-label={`Go to page ${pageNum}`}
+                        aria-current={currentPage === pageNum ? 'page' : undefined}
+                        className={`px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
+                          currentPage === pageNum
+                            ? 'bg-orange-500 text-white'
+                            : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  });
+                })()}
                 
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}

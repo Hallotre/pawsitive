@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifySession } from '@/lib/session'
 import { updatePet, deletePet } from '@/lib/api'
 
+// Prevent static generation for this API route
+export const dynamic = 'force-dynamic'
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

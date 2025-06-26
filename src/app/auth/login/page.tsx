@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react'
+import { inputStyles, buttonStyles, labelStyles } from '@/lib/styles'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -91,7 +92,7 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className={labelStyles.base}>
                 Email Address
               </label>
               <input
@@ -100,7 +101,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                className={inputStyles.base}
                 placeholder="your.name@stud.noroff.no"
                 suppressHydrationWarning
               />
@@ -110,7 +111,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className={labelStyles.base}>
                 Password
               </label>
               <div className="mt-1 relative">
@@ -120,7 +121,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                  className={inputStyles.withIcon}
                   placeholder="Enter your password"
                   suppressHydrationWarning
                 />

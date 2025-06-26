@@ -3,16 +3,15 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Eye, EyeOff, UserPlus, AlertCircle, CheckCircle } from 'lucide-react'
-import { inputStyles, buttonStyles, labelStyles, checkboxStyles } from '@/lib/styles'
+import { Eye, EyeOff, UserPlus, AlertCircle, CheckCircle, Heart, PawPrint } from 'lucide-react'
+import { inputStyles, buttonStyles, labelStyles } from '@/lib/styles'
 
-export default function RegisterPage() {
+export default function RegisterUserPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    venueManager: false
+    confirmPassword: ''
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -27,10 +26,9 @@ export default function RegisterPage() {
   }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: value
+      [e.target.name]: e.target.value
     }))
   }
 
@@ -42,7 +40,7 @@ export default function RegisterPage() {
       return false
     }
     if (!formData.email.endsWith('@stud.noroff.no')) {
-      setError('Email must be a valid @stud.noroff.no address')
+      setError('Email must be a valid @stud.noroff.no email address')
       return false
     }
     if (formData.password !== formData.confirmPassword) {
@@ -76,7 +74,7 @@ export default function RegisterPage() {
           name: formData.name,
           email: formData.email,
           password: formData.password,
-          venueManager: formData.venueManager,
+          venueManager: false, // Always false for user registration
         }),
       })
 
@@ -85,7 +83,7 @@ export default function RegisterPage() {
       if (response.ok) {
         setSuccess(true)
         setTimeout(() => {
-          router.push('/admin/dashboard')
+          router.push('/account/dashboard')
           router.refresh()
         }, 1500)
       } else {
@@ -103,9 +101,10 @@ export default function RegisterPage() {
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-pink-50 flex items-center justify-center px-4">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900">Admin Registration</h2>
+            <PawPrint className="mx-auto h-12 w-12 text-orange-500" />
+            <h2 className="mt-6 text-3xl font-bold text-gray-900">Create Your Account</h2>
             <p className="mt-2 text-gray-600">
-              Create your admin account to manage pets
+              Save your favorite pets and get adoption updates
             </p>
           </div>
           <div className="bg-white rounded-lg shadow-lg p-8">
@@ -132,8 +131,8 @@ export default function RegisterPage() {
         <div className="max-w-md w-full text-center">
           <div className="bg-white rounded-lg shadow-lg p-8">
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Registration Successful!</h2>
-            <p className="text-gray-600">Redirecting to admin dashboard...</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to Pawsitive!</h2>
+            <p className="text-gray-600">Redirecting to your dashboard...</p>
           </div>
         </div>
       </div>
@@ -144,9 +143,28 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-pink-50 flex items-center justify-center px-4">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">Admin Registration</h2>
+          <PawPrint className="mx-auto h-12 w-12 text-orange-500" />
+          <h2 className="mt-6 text-3xl font-bold text-gray-900">Create Your Account</h2>
           <p className="mt-2 text-gray-600">
-            Create your admin account to manage pets
+            Save your favorite pets and get adoption updates
+          </p>
+        </div>
+
+        {/* User vs Admin Info */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-blue-900 mb-2">Account Types:</h3>
+          <div className="space-y-2 text-sm text-blue-800">
+            <div className="flex items-center">
+              <Heart className="h-4 w-4 mr-2 text-pink-500" />
+              <span><strong>User Account:</strong> Save favorites, track adoptions</span>
+            </div>
+            <div className="flex items-center">
+              <PawPrint className="h-4 w-4 mr-2 text-orange-500" />
+              <span><strong>Pet Administrator:</strong> Manage pets, admin access</span>
+            </div>
+          </div>
+          <p className="mt-2 text-xs text-blue-600">
+            Need admin access? <Link href="/auth/register" className="underline">Register as Pet Administrator</Link>
           </p>
         </div>
 
@@ -255,20 +273,6 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <div className="flex items-center">
-              <input
-                id="venueManager"
-                name="venueManager"
-                type="checkbox"
-                checked={formData.venueManager}
-                onChange={handleChange}
-                className={checkboxStyles.large}
-              />
-              <label htmlFor="venueManager" className="ml-2 block text-sm text-gray-700">
-                Register as <strong>Pet Administrator</strong> (Can manage pets and shelter operations)
-              </label>
-            </div>
-
             <button
               type="submit"
               disabled={isLoading}
@@ -287,7 +291,7 @@ export default function RegisterPage() {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Already have an admin account?{' '}
+              Already have an account?{' '}
               <Link
                 href="/auth/login"
                 className="font-medium text-orange-500 hover:text-orange-600"

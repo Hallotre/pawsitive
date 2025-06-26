@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createSession, deleteSession } from '@/lib/session'
 import { login, type NoroffUser } from '@/lib/api'
 
+// Prevent static generation for this API route
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     // Clear any existing invalid session first
@@ -22,8 +25,11 @@ export async function POST(request: NextRequest) {
     if (loginResponse.data) {
       const user: NoroffUser = loginResponse.data
       
-      // Create local session with Noroff user data
-      await createSession(user.name, user.email, 'admin')
+      // Create local session with venueManager property
+      // venueManager: true becomes 'admin', false becomes 'user'
+      await createSession(user.name, user.email, user.venueManager || false)
+      
+      const role = user.venueManager ? 'admin' : 'user'
       
       return NextResponse.json({
         success: true,
@@ -31,7 +37,8 @@ export async function POST(request: NextRequest) {
           id: user.name,
           email: user.email,
           name: user.name,
-          role: 'admin'
+          role: role,
+          venueManager: user.venueManager || false
         }
       })
     } else {

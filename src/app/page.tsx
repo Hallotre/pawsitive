@@ -11,7 +11,6 @@ export default function Home() {
             <div className="flex justify-center mb-8">
               <div className="relative">
                 <PawPrint className="h-16 w-16 text-orange-500" />
-                <Heart className="h-6 w-6 text-pink-500 absolute -top-1 -right-1" />
               </div>
             </div>
             
@@ -56,7 +55,7 @@ export default function Home() {
               Why Choose Pawsitive?
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              We're committed to making pet adoption a positive experience for both pets and families.
+              We&apos;re committed to making pet adoption a positive experience for both pets and families.
             </p>
           </div>
           

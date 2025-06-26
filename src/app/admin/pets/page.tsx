@@ -1,7 +1,7 @@
 import { requireAdmin } from '@/lib/auth'
 import { getPets } from '@/lib/api'
 import Link from 'next/link'
-import { PawPrint, Plus, Edit, Trash2, ArrowLeft } from 'lucide-react'
+import { PawPrint, Plus, Edit, ArrowLeft } from 'lucide-react'
 import { DeletePetButton } from '@/components'
 
 interface SearchParams {
@@ -19,7 +19,14 @@ export default async function AdminPetsPage({
   const page = parseInt(resolvedSearchParams.page || '1')
   const limit = 12
   
-  let pets: any[] = []
+  let pets: Array<{
+    id: string;
+    name: string;
+    breed: string;
+    age: number;
+    size: string;
+    image?: { url: string; alt: string };
+  }> = []
   let totalCount = 0
   let totalPages = 1
   
@@ -34,32 +41,29 @@ export default async function AdminPetsPage({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/admin/dashboard"
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <ArrowLeft className="h-6 w-6" />
-              </Link>
-              <PawPrint className="h-8 w-8 text-orange-500" />
-              <h1 className="text-2xl font-bold text-gray-900">Manage Pets</h1>
-            </div>
-            <Link
-              href="/admin/pets/new"
-              className="flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add New Pet
-            </Link>
-          </div>
-        </div>
-      </header>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page Title */}
+        <div className="mb-8 flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Link
+              href="/admin/dashboard"
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <ArrowLeft className="h-6 w-6" />
+            </Link>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Manage Pets</h1>
+              <p className="text-gray-600">Add, edit, and manage all pets in the system</p>
+            </div>
+          </div>
+          <Link
+            href="/admin/pets/new"
+            className="flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add New Pet
+          </Link>
+        </div>
         {/* Stats */}
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <div className="flex items-center justify-between">

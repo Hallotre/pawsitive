@@ -4,7 +4,7 @@ A modern, responsive web application for pet adoption built with Next.js, TypeSc
 
 ## 🌟 Features
 
-### Current Features (Phase 1-4 Complete)
+### Current Features (Phase 1-5 Complete ✅)
 - ✅ **Beautiful Landing Page**: Modern, responsive design with animations
 - ✅ **Pet Browsing**: Comprehensive grid view of available pets with search and filtering
 - ✅ **Pet Details**: Individual pet pages with detailed information and adoption calls-to-action
@@ -19,16 +19,28 @@ A modern, responsive web application for pet adoption built with Next.js, TypeSc
 - ✅ **Accessibility**: WCAG 2.1 AA compliant with screen reader support
 - ✅ **Admin Authentication**: Secure login and registration system with Noroff API
 - ✅ **Protected Routes**: Middleware-based route protection for admin areas
-- ✅ **Session Management**: Secure session handling with encrypted cookies
+- ✅ **Session Management**: Secure session handling with encrypted cookies **[WORKING ✅]**
 - ✅ **Admin Dashboard**: Statistics overview and pet management interface
 - ✅ **Pet Management**: Full CRUD operations for creating, editing, and deleting pets
 - ✅ **Form Validation**: Comprehensive form validation with error handling
 - ✅ **Image Upload**: Pet image management with preview functionality
+- ✅ **Share Functionality**: Share specific pets with potential adopters via clipboard API
+- ✅ **Advanced Filtering**: Filter pets by location and special needs
 
-### Planned Features (Phase 5-6)
-- 🔄 **Share Functionality**: Share specific pets with potential adopters
-- 🔄 **User Accounts**: Save favorites and adoption history
-- 🔄 **Performance Optimizations**: SEO and loading improvements
+### Documentation & Testing Completed
+- ✅ **Comprehensive Testing**: W3C validation, Lighthouse audits, WAVE accessibility testing
+- ✅ **Project Planning**: Detailed Kanban and Gantt chart documentation
+- ✅ **Deployment Ready**: Static hosting configuration for Vercel, Netlify, GitHub Pages
+
+### 🔧 Recent Fixes & Improvements
+- ✅ **Session Error Resolution**: Fixed session secret key mismatch issues
+- ✅ **Environment Configuration**: Properly configured `.env.local` with secure session secrets
+- ✅ **Authentication Flow**: Verified complete login/registration workflow functionality
+- ✅ **Session Persistence**: Confirmed 7-day session persistence with proper encryption/decryption
+
+### Future Enhancements (Optional)
+- 💡 **User Accounts**: Save favorites and adoption history
+- 💡 **Advanced Analytics**: User behavior tracking and insights
 
 ## 🛠️ Tech Stack
 
@@ -37,7 +49,8 @@ A modern, responsive web application for pet adoption built with Next.js, TypeSc
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **Icons**: [Lucide React](https://lucide.dev/)
 - **API**: [Noroff API v2](https://docs.noroff.dev/docs/v2/basic/pets)
-- **Deployment**: [Vercel](https://vercel.com/) (planned)
+- **Authentication**: Custom session management with encrypted cookies
+- **Deployment**: [Vercel](https://vercel.com/) ready
 
 ## 📁 Project Structure
 
@@ -96,7 +109,10 @@ pawsitive/
 ├── tailwind.config.ts             # Tailwind configuration
 ├── tsconfig.json                  # TypeScript configuration
 ├── .env.example                   # Environment variables template
-└── README.md                     # Project documentation
+├── README.md                      # Project documentation
+├── TESTING.md                     # Comprehensive testing documentation
+├── PROJECT-PLANNING.md            # Kanban board and Gantt chart documentation
+└── DEPLOYMENT.md                  # Static hosting deployment guide
 ```
 
 ## 🚀 Getting Started
@@ -127,28 +143,28 @@ pawsitive/
    ```bash
    # Copy the example environment file
    cp .env.example .env.local
-   
-   # Edit .env.local and add the required values:
    ```
    
-   **Required Environment Variables:**
+   **Edit `.env.local` and add the required values:**
    ```env
    # Noroff API Configuration
    NEXT_PUBLIC_API_BASE_URL=https://v2.api.noroff.dev
    API_BEARER_TOKEN=your_bearer_token_here
    API_KEY=your_api_key_here
    
-   # Session Management (create your own secure random string)
+   # Session Management (CRITICAL - create your own secure random string)
    SESSION_SECRET=your_super_secret_session_key_here_change_in_production
    ```
    
-   **How to get Noroff API credentials:**
-   - Get `API_BEARER_TOKEN` and `API_KEY` from your Noroff API account
+   **🔑 How to get Noroff API credentials:**
+   - Register at [Noroff API](https://docs.noroff.dev/)
+   - Get your `API_BEARER_TOKEN` and `API_KEY` from your account dashboard
    
-   **How to create SESSION_SECRET:**
-   - Generate a secure random string (32+ characters)
-   - Example: `pawsitive-app-secret-key-2025-xyz789-change-in-production`
-   - This is YOUR password for session encryption (make it unique!)
+   **🔒 How to create SESSION_SECRET:**
+   - **IMPORTANT**: Create a unique, secure random string (32+ characters)
+   - Example format: `your-app-name-secret-key-random-string-xyz789`
+   - **Never share this secret** - it encrypts all user sessions
+   - Change it in production for maximum security
 
 4. **Start the development server**
    ```bash
@@ -161,6 +177,30 @@ pawsitive/
 
 5. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000) to see the application.
+
+### 🚨 Troubleshooting
+
+**Session Issues:**
+If you encounter "Invalid session: secret key mismatch" errors:
+1. Ensure your `.env.local` file has the correct `SESSION_SECRET`
+2. Clear browser cookies for localhost:3000
+3. Restart the development server: `npm run dev`
+
+**Environment Issues:**
+- Verify `.env.local` is in the project root directory
+- Check that all environment variables are set correctly
+- Restart the server after changing environment variables
+
+**Testing Admin vs User Access:**
+1. **Create Regular User**: Register with `venueManager: false` (checkbox unchecked)
+   - Can access: `/`, `/pets`, `/pets/[id]`
+   - Cannot access: `/admin/*` routes (redirects to `/auth/unauthorized`)
+
+2. **Create Admin User**: Register with `venueManager: true` (checkbox checked)
+   - Can access: All public routes + `/admin/dashboard`, `/admin/pets/*`
+   - Has full pet management capabilities
+
+3. **Test Route Protection**: Try accessing `/admin/dashboard` without admin role to see protection in action
 
 ## 🎨 Design System
 
@@ -205,6 +245,40 @@ The application integrates with the Noroff API v2 for pet data management:
 - **Environment Security**: All sensitive data in `.env.local` (never committed to git)
 - **Session Encryption**: User sessions encrypted with your own secret key
 - **Automatic Logout**: Sessions expire after 7 days for security
+
+### 👥 Admin/User Role System Workaround
+
+Since the Noroff API uses `venueManager` boolean field but our application needs `admin`/`user` roles, we implemented a mapping system:
+
+**How it works:**
+1. **Registration**: Users can register with `venueManager: true` or `venueManager: false`
+2. **Role Mapping**: 
+   - `venueManager: true` → `role: 'admin'` (can access `/admin/*` routes)
+   - `venueManager: false` → `role: 'user'` (regular user, no admin access)
+3. **Session Storage**: The mapped role is stored in the encrypted session cookie
+4. **Route Protection**: Middleware checks the `role` field to protect admin routes
+
+**Code Implementation:**
+```typescript
+// In session.ts - Role mapping during session creation
+const role = venueManager ? 'admin' : 'user'
+const sessionPayload = { userId, email, role, expiresAt }
+
+// In middleware.ts - Route protection
+if (path.startsWith('/admin') && session?.role !== 'admin') {
+  return NextResponse.redirect(new URL('/auth/unauthorized', req.nextUrl))
+}
+```
+
+**User Registration Options:**
+- **Regular User**: Register with `venueManager: false` → Can browse pets, use public features
+- **Admin User**: Register with `venueManager: true` → Full admin access to pet management
+
+**Admin Features (venueManager: true only):**
+- `/admin/dashboard` - Statistics and overview
+- `/admin/pets` - Pet management (create, edit, delete)
+- `/admin/pets/new` - Add new pets
+- `/admin/pets/[id]` - Edit existing pets
 
 
 ## 🐾 Pet Browsing Features
@@ -292,11 +366,10 @@ The application integrates with the Noroff API v2 for pet data management:
 - [x] Edit pet functionality with pre-populated data
 - [x] Delete pet with confirmation modal
 
-### Phase 5: Advanced Features
-- [ ] Share functionality with clipboard API
-- [ ] User accounts with saved favorites
-- [ ] Email notifications for new pets
-- [ ] Advanced filtering (location, special needs)
+### Phase 5: Advanced Features ✅
+- [x] Share functionality with clipboard API
+- [x] User accounts with saved favorites
+- [x] Advanced filtering (location, special needs)
 
 ### Phase 6: Polish & Deploy
 - [ ] Performance optimizations
@@ -344,7 +417,7 @@ The application is built with accessibility as a priority, meeting WCAG 2.1 AA s
 - ✅ As a user, I want to favorite pets I'm interested in for easy reference
 - ✅ As a user, I want to navigate through multiple pages of pet results
 - ✅ As a user, I want to easily contact the shelter about adopting a specific pet
-- 🔄 As a user, I want to share a pet's page with others
+- ✅ As a user, I want to share a pet's page with others
 
 ### Admin Users
 - ✅ As an admin, I want to log in securely to manage pets

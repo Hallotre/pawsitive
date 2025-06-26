@@ -3,33 +3,25 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Save, AlertCircle, CheckCircle } from 'lucide-react'
-
-interface Pet {
-  id?: string
-  name: string
-  breed: string
-  age: number
-  size: string
-  color: string
-  description: string
-  image?: {
-    url: string
-    alt: string
-  }
-}
+import { inputStyles, selectStyles, textareaStyles, labelStyles, buttonStyles } from '@/lib/styles'
+import { Pet } from '@/lib/api'
 
 interface PetFormProps {
   mode: 'create' | 'edit'
   pet?: Pet
 }
 
-const initialFormData: Pet = {
+const initialFormData: Omit<Pet, 'id' | 'created' | 'updated' | 'owner'> = {
   name: '',
+  species: 'dog',
   breed: '',
   age: 1,
+  gender: 'male',
   size: 'medium',
   color: '',
   description: '',
+  adoptionStatus: 'available',
+  location: '',
   image: {
     url: '',
     alt: ''
@@ -37,7 +29,21 @@ const initialFormData: Pet = {
 }
 
 export default function PetForm({ mode, pet }: PetFormProps) {
-  const [formData, setFormData] = useState<Pet>(pet || initialFormData)
+  const [formData, setFormData] = useState<Omit<Pet, 'id' | 'created' | 'updated' | 'owner'>>(
+    pet ? {
+      name: pet.name,
+      species: pet.species,
+      breed: pet.breed,
+      age: pet.age,
+      gender: pet.gender,
+      size: pet.size,
+      color: pet.color,
+      description: pet.description,
+      adoptionStatus: pet.adoptionStatus,
+      location: pet.location,
+      image: pet.image
+    } : initialFormData
+  )
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -71,9 +77,9 @@ export default function PetForm({ mode, pet }: PetFormProps) {
   }
 
   const validateForm = () => {
-    const requiredFields = ['name', 'breed', 'color', 'description']
+    const requiredFields = ['name', 'species', 'breed', 'gender', 'color', 'description', 'location'] as const
     for (const field of requiredFields) {
-      if (!formData[field as keyof Pet]) {
+      if (!formData[field]) {
         setError(`${field.charAt(0).toUpperCase() + field.slice(1)} is required`)
         return false
       }
@@ -150,8 +156,8 @@ export default function PetForm({ mode, pet }: PetFormProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-            Pet Name *
+          <label htmlFor="name" className={labelStyles.required}>
+            Pet Name
           </label>
           <input
             id="name"
@@ -160,14 +166,36 @@ export default function PetForm({ mode, pet }: PetFormProps) {
             required
             value={formData.name}
             onChange={handleChange}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+            className={inputStyles.base}
             placeholder="e.g., Buddy"
           />
         </div>
 
         <div>
-          <label htmlFor="breed" className="block text-sm font-medium text-gray-700">
-            Breed *
+          <label htmlFor="species" className={labelStyles.required}>
+            Species
+          </label>
+          <select
+            id="species"
+            name="species"
+            required
+            value={formData.species}
+            onChange={handleChange}
+            className={selectStyles.base}
+          >
+            <option value="dog">Dog</option>
+            <option value="cat">Cat</option>
+            <option value="bird">Bird</option>
+            <option value="rabbit">Rabbit</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label htmlFor="breed" className={labelStyles.required}>
+            Breed
           </label>
           <input
             id="breed"
@@ -176,16 +204,34 @@ export default function PetForm({ mode, pet }: PetFormProps) {
             required
             value={formData.breed}
             onChange={handleChange}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+            className={inputStyles.base}
             placeholder="e.g., Golden Retriever"
           />
+        </div>
+
+        <div>
+          <label htmlFor="gender" className={labelStyles.required}>
+            Gender
+          </label>
+          <select
+            id="gender"
+            name="gender"
+            required
+            value={formData.gender}
+            onChange={handleChange}
+            className={selectStyles.base}
+          >
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="unknown">Unknown</option>
+          </select>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
-          <label htmlFor="age" className="block text-sm font-medium text-gray-700">
-            Age (years) *
+          <label htmlFor="age" className={labelStyles.required}>
+            Age (years)
           </label>
           <input
             id="age"
@@ -196,13 +242,13 @@ export default function PetForm({ mode, pet }: PetFormProps) {
             required
             value={formData.age}
             onChange={handleChange}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+            className={inputStyles.number}
           />
         </div>
 
         <div>
-          <label htmlFor="size" className="block text-sm font-medium text-gray-700">
-            Size *
+          <label htmlFor="size" className={labelStyles.required}>
+            Size
           </label>
           <select
             id="size"
@@ -210,7 +256,7 @@ export default function PetForm({ mode, pet }: PetFormProps) {
             required
             value={formData.size}
             onChange={handleChange}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+            className={selectStyles.base}
           >
             <option value="small">Small</option>
             <option value="medium">Medium</option>
@@ -219,8 +265,8 @@ export default function PetForm({ mode, pet }: PetFormProps) {
         </div>
 
         <div>
-          <label htmlFor="color" className="block text-sm font-medium text-gray-700">
-            Color *
+          <label htmlFor="color" className={labelStyles.required}>
+            Color
           </label>
           <input
             id="color"
@@ -229,15 +275,51 @@ export default function PetForm({ mode, pet }: PetFormProps) {
             required
             value={formData.color}
             onChange={handleChange}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+            className={inputStyles.base}
             placeholder="e.g., Golden"
           />
         </div>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label htmlFor="location" className={labelStyles.required}>
+            Location
+          </label>
+          <input
+            id="location"
+            name="location"
+            type="text"
+            required
+            value={formData.location}
+            onChange={handleChange}
+            className={inputStyles.base}
+            placeholder="e.g., Bergen, Norway"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="adoptionStatus" className={labelStyles.required}>
+            Adoption Status
+          </label>
+          <select
+            id="adoptionStatus"
+            name="adoptionStatus"
+            required
+            value={formData.adoptionStatus}
+            onChange={handleChange}
+            className={selectStyles.base}
+          >
+            <option value="available">Available</option>
+            <option value="pending">Pending</option>
+            <option value="adopted">Adopted</option>
+          </select>
+        </div>
+      </div>
+
       <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-          Description *
+        <label htmlFor="description" className={labelStyles.required}>
+          Description
         </label>
         <textarea
           id="description"
@@ -246,7 +328,7 @@ export default function PetForm({ mode, pet }: PetFormProps) {
           required
           value={formData.description}
           onChange={handleChange}
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+          className={textareaStyles.base}
           placeholder="Tell us about this pet's personality, needs, and what makes them special..."
         />
       </div>
@@ -255,7 +337,7 @@ export default function PetForm({ mode, pet }: PetFormProps) {
         <h3 className="text-lg font-medium text-gray-900">Pet Photo (Optional)</h3>
         
         <div>
-          <label htmlFor="image.url" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="image.url" className={labelStyles.base}>
             Image URL
           </label>
           <input
@@ -264,13 +346,13 @@ export default function PetForm({ mode, pet }: PetFormProps) {
             type="url"
             value={formData.image?.url || ''}
             onChange={handleChange}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+            className={inputStyles.base}
             placeholder="https://example.com/pet-photo.jpg"
           />
         </div>
 
         <div>
-          <label htmlFor="image.alt" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="image.alt" className={labelStyles.base}>
             Image Description
           </label>
           <input
@@ -279,7 +361,7 @@ export default function PetForm({ mode, pet }: PetFormProps) {
             type="text"
             value={formData.image?.alt || ''}
             onChange={handleChange}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+            className={inputStyles.base}
             placeholder="Brief description of the photo for accessibility"
           />
         </div>
@@ -303,14 +385,14 @@ export default function PetForm({ mode, pet }: PetFormProps) {
         <button
           type="button"
           onClick={() => router.back()}
-          className="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+          className={buttonStyles.secondary}
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isLoading}
-          className="flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className={buttonStyles.primary}
         >
           {isLoading ? (
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>

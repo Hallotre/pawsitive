@@ -1,15 +1,20 @@
 import { requireAdmin } from '@/lib/auth'
 import { getPets } from '@/lib/api'
 import Link from 'next/link'
-import { PawPrint, Plus, Users, BarChart3, Settings, LogOut } from 'lucide-react'
-import { LogoutButton } from '@/components'
+import { PawPrint, Plus, Users, BarChart3, Settings } from 'lucide-react'
 
 export default async function AdminDashboard() {
   const session = await requireAdmin()
   
   // Get pet statistics
   let totalPets = 0
-  let recentPets: any[] = []
+  let recentPets: Array<{
+    id: string;
+    name: string;
+    breed: string;
+    age: number;
+    image?: { url: string; alt: string };
+  }> = []
   
   try {
     const petsResponse = await getPets(1, 100) // Get first 100 pets for stats
@@ -21,23 +26,12 @@ export default async function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <PawPrint className="h-8 w-8 text-orange-500" />
-              <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">Welcome, {session.email}</span>
-              <LogoutButton />
-            </div>
-          </div>
-        </div>
-      </header>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page Title */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="text-gray-600">Welcome back, {session.email}!</p>
+        </div>
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">

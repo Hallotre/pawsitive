@@ -76,7 +76,7 @@ async function apiRequest<T>(
         const errorBody = await response.json();
         errorDetails = JSON.stringify(errorBody);
         console.error('API Error Details:', errorBody);
-      } catch (e) {
+      } catch {
         errorDetails = await response.text();
         console.error('API Error Text:', errorDetails);
       }
@@ -128,12 +128,14 @@ export interface NoroffUser {
     url: string;
     alt: string;
   };
+  venueManager?: boolean;  // Added this property
   accessToken?: string;
 }
 
 export async function login(email: string, password: string): Promise<ApiResponse<NoroffUser>> {
   // For login, we shouldn't include API headers as they're for authenticated requests
-  const url = `${API_BASE_URL}/auth/login`;
+  // Add _holidaze=true to get venueManager property in response
+  const url = `${API_BASE_URL}/auth/login?_holidaze=true`;
   
   try {
     const response = await fetch(url, {
@@ -151,7 +153,7 @@ export async function login(email: string, password: string): Promise<ApiRespons
         const errorBody = await response.json();
         errorDetails = JSON.stringify(errorBody);
         console.error('Login API Error Details:', errorBody);
-      } catch (e) {
+      } catch {
         errorDetails = await response.text();
         console.error('Login API Error Text:', errorDetails);
       }
@@ -173,7 +175,7 @@ export async function login(email: string, password: string): Promise<ApiRespons
   }
 }
 
-export async function register(name: string, email: string, password: string): Promise<ApiResponse<NoroffUser>> {
+export async function register(name: string, email: string, password: string, venueManager: boolean = false): Promise<ApiResponse<NoroffUser>> {
   // For registration, we shouldn't include API headers as they're for authenticated requests
   const url = `${API_BASE_URL}/auth/register`;
   
@@ -183,7 +185,7 @@ export async function register(name: string, email: string, password: string): P
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, venueManager }),
     });
 
     if (!response.ok) {
@@ -193,7 +195,7 @@ export async function register(name: string, email: string, password: string): P
         const errorBody = await response.json();
         errorDetails = JSON.stringify(errorBody);
         console.error('Registration API Error Details:', errorBody);
-      } catch (e) {
+      } catch {
         errorDetails = await response.text();
         console.error('Registration API Error Text:', errorDetails);
       }

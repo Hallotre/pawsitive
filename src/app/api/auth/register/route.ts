@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createSession, deleteSession } from '@/lib/session'
 import { register, type NoroffUser } from '@/lib/api'
 
+// Prevent static generation for this API route
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     // Clear any existing invalid session first
     await deleteSession()
     
-    const { name, email, password } = await request.json()
+    const { name, email, password, venueManager = false } = await request.json()
 
     if (!name || !email || !password) {
       return NextResponse.json(
@@ -40,14 +43,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Use Noroff API for registration
-    const registerResponse = await register(name, email, password)
+    // Use Noroff API for registration with venueManager flag
+    const registerResponse = await register(name, email, password, venueManager)
     
     if (registerResponse.data) {
       const user: NoroffUser = registerResponse.data
       
-      // Create local session with Noroff user data
-      await createSession(user.name, user.email, 'admin')
+      // Create local session with venueManager property
+      // venueManager: true becomes 'admin', false becomes 'user'
+      await createSession(user.name, user.email, user.venueManager || false)
+      
+      const role = user.venueManager ? 'admin' : 'user'
       
       return NextResponse.json({
         success: true,
@@ -55,7 +61,8 @@ export async function POST(request: NextRequest) {
           id: user.name,
           email: user.email,
           name: user.name,
-          role: 'admin'
+          role: role,
+          venueManager: user.venueManager || false
         }
       })
     } else {

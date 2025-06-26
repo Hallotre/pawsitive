@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { deleteSession } from '@/lib/session'
 
+// Prevent static generation for this API route
+export const dynamic = 'force-dynamic'
+
 export async function POST() {
   try {
     await deleteSession()

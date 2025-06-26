@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifySession } from '@/lib/session'
 import { createPet } from '@/lib/api'
 
+// Prevent static generation for this API route
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     // Verify admin session
@@ -16,7 +19,7 @@ export async function POST(request: NextRequest) {
     const petData = await request.json()
 
     // Validate required fields
-    const requiredFields = ['name', 'breed', 'age', 'size', 'color', 'description']
+    const requiredFields = ['name', 'species', 'breed', 'age', 'gender', 'size', 'color', 'description', 'location', 'adoptionStatus']
     for (const field of requiredFields) {
       if (!petData[field]) {
         return NextResponse.json(
