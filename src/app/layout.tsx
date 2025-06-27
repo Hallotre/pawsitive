@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     shortcut: '/icon.svg',
     apple: '/apple-icon.svg',
   },
-  metadataBase: new URL('https://pawsitive-pet-adoption-qh9d38k4r-tobys-projects-399f8cb3.vercel.app'),
+  metadataBase: new URL('https://pawsitive-pet-adoption.vercel.app'),
   openGraph: {
     title: 'Pawsitive - Pet Adoption Made Easy',
     description: 'Find your perfect furry friend. Connect loving families with pets in need of homes.',
