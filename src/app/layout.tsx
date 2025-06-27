@@ -18,6 +18,17 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Pawsitive - Pet Adoption Made Easy",
   description: "Find your perfect furry friend. Connect loving families with pets in need of homes through our modern pet adoption platform.",
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/apple-icon.svg',
+  },
+  metadataBase: new URL('https://pawsitive-pet-adoption-qh9d38k4r-tobys-projects-399f8cb3.vercel.app'),
+  openGraph: {
+    title: 'Pawsitive - Pet Adoption Made Easy',
+    description: 'Find your perfect furry friend. Connect loving families with pets in need of homes.',
+    images: ['/apple-icon.svg'],
+  },
 };
 
 function Footer() {

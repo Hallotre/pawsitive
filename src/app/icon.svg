@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <style>
+      .pawprint { fill: #f97316; }
+      @media (prefers-color-scheme: dark) {
+        .pawprint { fill: #fb923c; }
+      }
+    </style>
+  </defs>
+  
+  <!-- Main paw pad -->
+  <ellipse cx="16" cy="21" rx="5.5" ry="7" class="pawprint"/>
+  
+  <!-- Top left toe -->
+  <ellipse cx="10.5" cy="9" rx="2.2" ry="3.5" class="pawprint"/>
+  
+  <!-- Top center toe -->
+  <ellipse cx="16" cy="7" rx="2.2" ry="3.5" class="pawprint"/>
+  
+  <!-- Top right toe -->
+  <ellipse cx="21.5" cy="9" rx="2.2" ry="3.5" class="pawprint"/>
+  
+  <!-- Side toe -->
+  <ellipse cx="25" cy="15" rx="1.8" ry="2.8" class="pawprint"/>
+</svg> 
