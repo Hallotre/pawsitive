@@ -79,7 +79,7 @@ export default function Navigation() {
                 {/* Authenticated User Navigation */}
                 {isAuthenticated ? (
                   <>
-                    {/* Admin Links */}
+                    {/* Admin Links - Only show admin dashboard for authenticated admins */}
                     {isAdmin && (
                       <Link
                         href="/admin/dashboard"
@@ -116,25 +116,17 @@ export default function Navigation() {
                   /* Non-authenticated Navigation */
                   <>
                     <Link
-                      href="/auth/login"
+                      href="/auth/user-login"
                       className="text-gray-700 hover:text-orange-500 transition-colors font-medium"
                     >
                       Login
                     </Link>
-                    <div className="flex items-center space-x-2">
-                      <Link
-                        href="/auth/register-user"
-                        className="bg-pink-500 text-white px-4 py-2 rounded-full hover:bg-pink-600 transition-colors font-medium text-sm"
-                      >
-                        Sign Up
-                      </Link>
-                      <Link
-                        href="/auth/register"
-                        className="bg-orange-500 text-white px-4 py-2 rounded-full hover:bg-orange-600 transition-colors font-medium text-sm"
-                      >
-                        Admin
-                      </Link>
-                    </div>
+                    <Link
+                      href="/auth/register-user"
+                      className="bg-pink-500 text-white px-4 py-2 rounded-full hover:bg-pink-600 transition-colors font-medium text-sm"
+                    >
+                      Sign Up
+                    </Link>
                   </>
                 )}
               </>
@@ -215,7 +207,7 @@ export default function Navigation() {
                   ) : (
                     <>
                       <Link
-                        href="/auth/login"
+                        href="/auth/user-login"
                         className="block px-3 py-2 text-gray-700 hover:text-orange-500 transition-colors font-medium"
                         onClick={() => setIsMenuOpen(false)}
                       >
@@ -227,13 +219,6 @@ export default function Navigation() {
                         onClick={() => setIsMenuOpen(false)}
                       >
                         Sign Up
-                      </Link>
-                      <Link
-                        href="/auth/register"
-                        className="block px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium mx-3 mt-1"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Admin
                       </Link>
                     </>
                   )}

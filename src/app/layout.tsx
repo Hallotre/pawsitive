@@ -35,7 +35,7 @@ function Footer() {
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid md:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-5 gap-8">
           {/* Brand */}
           <div className="col-span-1">
             <div className="flex items-center space-x-2 mb-4">
@@ -86,6 +86,28 @@ function Footer() {
               <li>
                 <Link href="/resources" className="text-gray-400 hover:text-white transition-colors">
                   Pet Care Resources
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Admin Access */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Admin Access</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link href="/auth/login" className="text-gray-400 hover:text-orange-500 transition-colors">
+                  Admin Login
+                </Link>
+              </li>
+              <li>
+                <Link href="/auth/register" className="text-gray-400 hover:text-orange-500 transition-colors">
+                  Admin Registration
+                </Link>
+              </li>
+              <li>
+                <Link href="/admin/dashboard" className="text-gray-400 hover:text-orange-500 transition-colors">
+                  Admin Dashboard
                 </Link>
               </li>
             </ul>
